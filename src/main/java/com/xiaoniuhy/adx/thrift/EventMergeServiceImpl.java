@@ -64,7 +64,7 @@ public class EventMergeServiceImpl implements EventMergeService.Iface {
             AdxAdposEvents mergedEvent =  builder.build();
             byte[]  value = mergedEvent.toByteArray();
             rocksDB.put(sourceKeyBytes,value);
-            //mergedEvent.writeDelimitedTo(fos);
+            mergedEvent.writeDelimitedTo(fos);
         } catch (RocksDBException | IOException e) {
             e.printStackTrace();
         }
@@ -173,14 +173,16 @@ public class EventMergeServiceImpl implements EventMergeService.Iface {
 
             byte[]  value = mergedEvent.toByteArray();
             rocksDB.put(keyBytes,value);
-            switch (builder.getEventCode()){
-                case MIDAS_APP_OFFER:
-                case MIDAS_IMPRESSION:
-                case MIDAS_CLICK:
-                case MIDAS_REWARDED:
-                    mergedEvent.writeDelimitedTo(fos);
-                    break;
-            }
+            // switch (builder.getEventCode()){
+            //     case MIDAS_APP_OFFER:
+            //     case MIDAS_IMPRESSION:
+            //     case MIDAS_CLICK:
+            //     case MIDAS_REWARDED:
+            //         mergedEvent.writeDelimitedTo(fos);
+            //         break;
+            // }
+
+            mergedEvent.writeDelimitedTo(fos);
            
 
             if(oldSourceAdxAdposEvents != null){
