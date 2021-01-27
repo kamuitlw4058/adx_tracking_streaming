@@ -41,6 +41,11 @@ import com.xiaoniuhy.adp.pb.clickhouse.AdpBidType
 import com.xiaoniuhy.adp.pb.clickhouse.AdpTimeType
 import com.xiaoniuhy.adp.pb.clickhouse.AdpEventType
 
+import com.xiaoniuhy.adx.pb.adx.adpos_events._;
+import com.xiaoniuhy.adp.pb.clickhouse._;
+import com.xiaoniuhy.adx.model.midas2._;
+import com.xiaoniuhy.adx.thrift.EventMergeClient;
+import com.xiaoniuhy.utils.BytesUtils;
 
 object main {
 
@@ -48,7 +53,7 @@ object main {
         var event:AdpTrackingLogEvent = null;
         var tTransport:TTransport = null;
         try {
-            tTransport = new TSocket("localhost", 8989, 30000);
+            tTransport = new TSocket("localhost", 18989, 30000);
             // 协议要和服务端一致
             var protocol = new TBinaryProtocol(tTransport);
             var client = new EventMergeService.Client(protocol);
@@ -75,7 +80,7 @@ object main {
 
   def main(args:Array[String]): Unit ={
     val conf = new SparkConf().setMaster("local[2]") 
-    .setAppName("NetworkWordCount") 
+    .setAppName("Spark_Midas2") 
     .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
 
 
@@ -90,7 +95,7 @@ object main {
       "enable.auto.commit" -> (false: java.lang.Boolean)
     )
 
-    val topics = Array("adp_test")
+    val topics = Array("bigdata_xn_point_report")
     val stream = KafkaUtils.createDirectStream[String, ByteBuffer](
       ssc,
       PreferConsistent,
@@ -102,11 +107,14 @@ object main {
     stream.foreachRDD { rdd =>
       val offsetRanges = rdd.asInstanceOf[HasOffsetRanges].offsetRanges
       rdd.foreachPartition { iter =>
-       var arrayRows = new ListBuffer[AdpTrackingLogEvent]();
+       var arrayRows = new ListBuffer[AdxAdposEvents]();
         for(  x <- iter ){
-          val log = TrackingLog.parseFrom( x.value())
-          val row =  TypeConvertUtils.trackingLog2ClickhouseLog(log)
-          arrayRows += row
+          val trackModel =  EventMergeClient.parseFastjson(BytesUtils.decode(x.value()));
+          
+          val events =  MidasTrackModelConvUtils.ConvToClickhouseAdxAdpos(trackModel);
+          //val log = TrackingLog.parseFrom( x.value())
+          //val row =  TypeConvertUtils.trackingLog2ClickhouseLog(log)
+          arrayRows ++= events
         }
         if(arrayRows.length != 0){
           sendBatchClient(arrayRows.toList)

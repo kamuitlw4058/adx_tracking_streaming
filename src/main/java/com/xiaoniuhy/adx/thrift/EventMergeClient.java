@@ -104,7 +104,7 @@ public class EventMergeClient {
     //     trackingEventBuilder.setEventType(eventType);
     //     return client.startClient(trackingEventBuilder.build());
     // }
-    public static MidasTrackModel parseFastjosn(String j){
+    public static MidasTrackModel parseFastjson(String j){
         ParserConfig.getGlobalInstance().putDeserializer(MidasEventTrack.class, new MidasEventTrackParser());
         //ParserConfig.getGlobalInstance().putDeserializer(int.class, new IntegerParser());
         MidasTrackModel trackModel = JSON.parseObject(j ,MidasTrackModel.class);
@@ -116,7 +116,7 @@ public class EventMergeClient {
     public  static  List<AdxAdposEvents> buildEvent() throws IOException{
         String j = FileUtils.readFile("data/midas_track2.json");
         //System.out.println(j);
-        MidasTrackModel trackModel =  parseFastjosn(j);
+        MidasTrackModel trackModel =  parseFastjson(j);
         List<AdxAdposEvents> events =  MidasTrackModelConvUtils.ConvToClickhouseAdxAdpos(trackModel);
         return events;
     }
