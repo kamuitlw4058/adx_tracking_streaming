@@ -12,9 +12,11 @@ module_data_dir = os.path.join(datapath,module)
 datalist  =os.listdir(module_data_dir)
 module_last_file = os.path.join(datapath,f'{module}.{last_flag}')
 
-pb_path = f'/home/wls81/workspace/xuyang/adp_common/src/main/proto/clickhouse.proto'
+pb_path = f'/home/wls81/workspace/kimi/adp_common/src/main/proto/adx_adpos_events.proto'
 
-pb_class = 'AdpTrackingLogEvent'
+pb_class = 'AdxAdposEvents'
+db = 'ad_adx'
+table = 'adpos_events'
 
 
 def string_toDatetime(string):
@@ -37,7 +39,7 @@ print('start to write pb data...')
 for f,ts,filepath in zip(datalist,formated_datalist,datalist):
     if ts > last_ts:
         print(f'start write:{f}')
-        cmd_format = f"""cat {os.path.join(module_data_dir,f)} | clickhouse-client -h  cc-uf6tj4rjbu5ez10lb.ads.aliyuncs.com -u chaixiaohui  --password AAAaaa111! --port 3306 --query "INSERT INTO xn_adp.imp_all FORMAT Protobuf SETTINGS format_schema='{pb_path}:{pb_class}'" """
+        cmd_format = f"""cat {os.path.join(module_data_dir,f)} | clickhouse-client -h  cc-uf6tj4rjbu5ez10lb.ads.aliyuncs.com -u chaixiaohui  --password AAAaaa111! --port 3306 --query "INSERT INTO {db}.{table} FORMAT Protobuf SETTINGS format_schema='{pb_path}:{pb_class}'" """
         r =  run_cli(cmd_format)
         if ts > final_ts:
             final_ts = ts
