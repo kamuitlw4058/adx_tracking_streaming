@@ -1,4 +1,4 @@
-package com.xiaoniuhy.adp.thrift;
+package com.xiaoniuhy.adx.thrift;
 import com.xiaoniuhy.utils.PropertiesUtils;
 import org.apache.thrift.TProcessor;
 import org.apache.thrift.protocol.TBinaryProtocol;
