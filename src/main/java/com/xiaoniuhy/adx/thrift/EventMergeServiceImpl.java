@@ -23,6 +23,7 @@ import com.xiaoniuhy.adp.pb.clickhouse.*;
 import org.rocksdb.RocksDBException;
 import io.prometheus.client.Summary;
 import com.google.protobuf.InvalidProtocolBufferException;
+import com.xiaoniuhy.adp.thrift.EventMergeService;
 
 public class EventMergeServiceImpl implements EventMergeService.Iface {
     private final RocksDB rocksDB;

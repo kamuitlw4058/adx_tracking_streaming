@@ -20,6 +20,8 @@ import com.xiaoniuhy.adx.model.midas2.MidasTrackModel;
 import com.xiaoniuhy.adx.model.midas2.MidasEventTrack;
 import com.xiaoniuhy.adx.model.midas2.MidasEventTrackParser;
 
+import com.xiaoniuhy.adp.thrift.EventMergeService;
+
 public class EventMergeThriftMain {
     public void startServer(){
         try {
