@@ -84,7 +84,7 @@ object main {
     .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
 
 
-    val ssc = new StreamingContext(conf, Seconds(10))
+    val ssc = new StreamingContext(conf, Seconds(30))
 
     val kafkaParams = Map[String, Object](
       "bootstrap.servers" -> "192.168.66.149:9092,192.168.66.147:9092,192.168.66.161:9092,192.168.66.160:9092,192.168.66.148:9092,192.168.66.162:9092",
