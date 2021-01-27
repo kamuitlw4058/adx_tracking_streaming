@@ -143,7 +143,7 @@
                             <addClasspath>true</addClasspath>
                             <!--   MANIFEST.MF 中 Class-Path -->
                             <classpathPrefix>lib/</classpathPrefix>
-                            <mainClass>com.xiaoniuhy.adp.thrift.EventMergeThriftMain</mainClass>
+                            <mainClass>com.xiaoniuhy.adx.adpos_events_streaming.main</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
