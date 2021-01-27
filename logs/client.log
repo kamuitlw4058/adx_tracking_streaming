@@ -1,0 +1,7 @@
+event:Session {
+  Id: "v55cf61j6r81wvcbmafuy8ct9h4qwed2"
+  AdposId: "adpos_6845037661"
+}
+AdSource {
+  Id: "v55cf61j6r81wvcbmafuy8ct9h4qwed2"
+}

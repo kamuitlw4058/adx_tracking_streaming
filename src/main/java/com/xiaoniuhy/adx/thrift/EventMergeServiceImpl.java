@@ -41,19 +41,48 @@ public class EventMergeServiceImpl implements EventMergeService.Iface {
 
     public byte[] process(ByteBuffer log,FileOutputStream fos) {
         byte[] ret = null;
-        processRow(log,fos)
+        byte[] bs = BytesUtils.toBytes(log);
+        processRow(bs,fos);
         return ret;
     }
 
-    public void  processSourceEvent(AdxAdposEvents.Builder builder){
-        byte[] sourceKeyBytes = builder.getAdSource().getId().getBytes();
-        byte[] oldSourceValue =  rocksDB.get(sourceKeyBytes);
+    public void  processSourceEvent(AdxAdposEvents.Builder builder,FileOutputStream fos){
+        try {
+            byte[] sourceKeyBytes = getSourceIdKey(builder.getAdSource().getId());
+            byte[] oldSourceValue =  rocksDB.get(sourceKeyBytes);
 
-        if(oldSourceValue != null && oldSourceValue.length > 0){
-            AdxAdposEvents.Builder oldSourceAdxAdposEvents = AdxAdposEvents.parseFrom(oldSourceValue).toBuilder();
-            builder =  oldSourceAdxAdposEvents.mergeFrom(builder.build());
+            if(oldSourceValue != null && oldSourceValue.length > 0){
+                AdxAdposEvents.Builder oldSourceAdxAdposEvents = AdxAdposEvents.parseFrom(oldSourceValue).toBuilder();
+                oldSourceAdxAdposEvents = oldSourceAdxAdposEvents.clearImpression();
+                oldSourceAdxAdposEvents = oldSourceAdxAdposEvents.clearClick();
+                oldSourceAdxAdposEvents = oldSourceAdxAdposEvents.clearReward();
+                builder =  oldSourceAdxAdposEvents.mergeFrom(builder.build());
+            }
+            builder =updateEventDate(builder);
+            builder =updateMergeCount(builder);
+            AdxAdposEvents mergedEvent =  builder.build();
+            byte[]  value = mergedEvent.toByteArray();
+            rocksDB.put(sourceKeyBytes,value);
+            //mergedEvent.writeDelimitedTo(fos);
+        } catch (RocksDBException | IOException e) {
+            e.printStackTrace();
         }
+        
+    }
+    public byte[] getSourceId2SessionIdKey(String sourceSessionId){
+        return  String.format("source_session_%s",sourceSessionId).getBytes();
+    }
 
+
+    public byte[] getSessionIdKey(String sessionId){
+        return  String.format("session_%s",sessionId).getBytes();
+    }
+
+    public byte[] getSourceIdKey(String sessionId){
+        return  String.format("source_%s",sessionId).getBytes();
+    }
+
+    public AdxAdposEvents.Builder updateMergeCount(AdxAdposEvents.Builder builder){
         Integer mergeCount = builder.getMergeCount();
         if(mergeCount != null){
             mergeCount = mergeCount +1;
@@ -63,65 +92,103 @@ public class EventMergeServiceImpl implements EventMergeService.Iface {
         }
 
         builder.setMergeCount(mergeCount);
-        AdxAdposEvents mergedEvent =  builder.build();
-        byte[]  value = mergedEvent.toByteArray();
-        rocksDB.put(sourceKeyBytes,value);
-        
+        return builder;
+    }
+
+
+    public AdxAdposEvents.Builder updateEventDate(AdxAdposEvents.Builder builder){
+        if(builder.getEventDate() == null){
+            String eventDate = new SimpleDateFormat("yyyy-MM-dd").format(new Date(builder.getTime().getTimestamp()));
+            builder.setEventDate(eventDate);
+        }
+        return builder;
     }
 
     public void processAdposEvent(AdxAdposEvents.Builder builder,FileOutputStream fos){
 
         try {
-        AdpInteractionType.Builder intercationBuilder = null;   
-        switch (builder.getEventCode()){
-            case MIDAS_IMPRESSION:
-                intercationBuilder = builder.getImpressionBuilder();
-                break;
-            case MIDAS_CLICK:
-                intercationBuilder = builder.getClickBuilder();
-                break;
-            case MIDAS_REWARDED:
-                intercationBuilder = builder.getRewardBuilder();
-                break;
-        }
-        if(intercationBuilder != null){
-            intercationBuilder.addIp(0);
-            intercationBuilder.addTimestamp(builder.getTime().getTimestamp());
-        }
 
-        byte[] keyBytes = builder.getSession().getId().getBytes();
-        byte[] oldValue =  rocksDB.get(keyBytes);
+            byte[] keyBytes = getSessionIdKey(builder.getSession().getId());
+            byte[] oldValue =  rocksDB.get(keyBytes);
+            byte[] sourceKeyBytes = null;
+            byte[] oldSourceValue = null;
 
-        byte[] sourceKeyBytes = builder.getAdSource().getId().getBytes();
-        byte[] oldSourceValue =  rocksDB.get(sourceKeyBytes);
-
-
-        if(oldValue != null && oldValue.length > 0){
-            AdxAdposEvents.Builder oldAdxAdposEvents = AdxAdposEvents.parseFrom(oldValue).toBuilder();
-            if(oldSourceValue != null && oldSourceValue.length > 0){
-                AdxAdposEvents oldSourceAdxAdposEvents = AdxAdposEvents.parseFrom(oldSourceValue);
-                oldAdxAdposEvents =  oldAdxAdposEvents.mergeFrom(oldSourceAdxAdposEvents);
+            AdxAdposEvents.Builder oldSourceAdxAdposEvents = null;
+            if( builder.hasAdSource() && builder.getAdSource().getId() != null) {
+                sourceKeyBytes = getSourceIdKey(builder.getAdSource().getId());
+                oldSourceValue =  rocksDB.get(sourceKeyBytes);
+                if(oldSourceValue != null && oldSourceValue.length > 0){
+                    oldSourceAdxAdposEvents = AdxAdposEvents.parseFrom(oldSourceValue).toBuilder();
+                    //rocksDB.put(getSourceId2SessionIdKey(builder.getAdSource().getId()),builder.getSession().getId());
+                }
             }
-          
-            builder =  oldAdxAdposEvents.mergeFrom(builder.build());
-        }
 
 
-        String eventDate = new SimpleDateFormat("yyyy-MM-dd").format(new Date(builder.getTime().getTimestamp()));
-        builder.setEventDate(eventDate);
-        Integer mergeCount = builder.getMergeCount();
-        if(mergeCount != null){
-            mergeCount = mergeCount +1;
-        }
-        else{
-            mergeCount = 1;
-        }
 
-        builder.setMergeCount(mergeCount);
-        AdxAdposEvents mergedEvent =  builder.build();
-        byte[]  value = mergedEvent.toByteArray();
-        rocksDB.put(keyBytes,value);
-        mergedEvent.writeDelimitedTo(fos);
+            if(oldValue != null && oldValue.length > 0){
+                AdxAdposEvents.Builder oldAdxAdposEvents = AdxAdposEvents.parseFrom(oldValue).toBuilder();
+                if(oldSourceAdxAdposEvents != null){
+                    oldSourceAdxAdposEvents = oldSourceAdxAdposEvents.clearImpression();
+                    oldSourceAdxAdposEvents = oldSourceAdxAdposEvents.clearClick();
+                    oldSourceAdxAdposEvents = oldSourceAdxAdposEvents.clearReward();
+                    oldAdxAdposEvents =  oldAdxAdposEvents.mergeFrom(oldSourceAdxAdposEvents.build());
+                }
+
+                builder =  oldAdxAdposEvents.mergeFrom(builder.build());
+            }
+            else{
+                if(oldSourceAdxAdposEvents != null){
+                    oldSourceAdxAdposEvents = oldSourceAdxAdposEvents.clearImpression();
+                    oldSourceAdxAdposEvents = oldSourceAdxAdposEvents.clearClick();
+                    oldSourceAdxAdposEvents = oldSourceAdxAdposEvents.clearReward();
+                    builder =  oldSourceAdxAdposEvents.mergeFrom(builder.build());
+                }
+            }
+
+
+            AdpInteractionType.Builder intercationBuilder = null;   
+            switch (builder.getEventCode()){
+                case MIDAS_IMPRESSION:
+                    intercationBuilder = builder.getImpressionBuilder();
+                    break;
+                case MIDAS_CLICK:
+                    intercationBuilder = builder.getClickBuilder();
+                    break;
+                case MIDAS_REWARDED:
+                    intercationBuilder = builder.getRewardBuilder();
+                    break;
+            }
+            if(intercationBuilder != null){
+                long ts = builder.getTime().getTimestamp();
+                if(!intercationBuilder.getTimestampList().contains(ts)){
+                    intercationBuilder.addIp(0);
+                    intercationBuilder.addTimestamp(ts);
+                }
+     
+            }
+            builder = updateEventDate(builder);
+            builder = updateMergeCount(builder);
+            AdxAdposEvents mergedEvent =  builder.build();
+
+            byte[]  value = mergedEvent.toByteArray();
+            rocksDB.put(keyBytes,value);
+            switch (builder.getEventCode()){
+                case MIDAS_APP_OFFER:
+                case MIDAS_IMPRESSION:
+                case MIDAS_CLICK:
+                case MIDAS_REWARDED:
+                    mergedEvent.writeDelimitedTo(fos);
+                    break;
+            }
+           
+
+            if(oldSourceAdxAdposEvents != null){
+               oldSourceAdxAdposEvents = oldSourceAdxAdposEvents.clearImpression();
+               oldSourceAdxAdposEvents = oldSourceAdxAdposEvents.clearClick();
+               oldSourceAdxAdposEvents = oldSourceAdxAdposEvents.clearReward();
+               oldSourceAdxAdposEvents = oldSourceAdxAdposEvents.mergeFrom(builder.build());
+               rocksDB.put(sourceKeyBytes,oldSourceAdxAdposEvents.build().toByteArray());
+           }
         } catch (RocksDBException | IOException e) {
             e.printStackTrace();
         }
@@ -133,7 +200,6 @@ public class EventMergeServiceImpl implements EventMergeService.Iface {
             AdxEventCode eventCode = builder.getEventCode();
             switch(eventCode){
                 case MIDAS_APP_REQUEST:
-                case MIDAS_AD_OFFER:
                 case MIDAS_APP_OFFER:
                 case MIDAS_IMPRESSION:
                 case MIDAS_CLICK:
@@ -145,7 +211,8 @@ public class EventMergeServiceImpl implements EventMergeService.Iface {
                 case MIDAS_CONFIG_OFFER:
                 case MIDAS_SOURCE_REQUEST:
                 case MIDAS_SOURCE_OFFER:
-                    processSourceEvent(builder);
+                case MIDAS_AD_OFFER:
+                    processSourceEvent(builder,fos);
                     break;
                 default:
                     break;
