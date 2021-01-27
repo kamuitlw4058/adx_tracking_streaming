@@ -99,7 +99,7 @@ public class EventMergeServiceImpl implements EventMergeService.Iface {
 
     public AdxAdposEvents.Builder updateEventDate(AdxAdposEvents.Builder builder){
         if(builder.getEventDate() == null){
-            String eventDate = new SimpleDateFormat("yyyy-MM-dd").format(new Date(builder.getTime().getTimestamp()));
+            String eventDate = new SimpleDateFormat("yyyy-MM-dd").format(new Date(builder.getTime().getTimestamp() * 1000));
             builder.setEventDate(eventDate);
         }
         return builder;
