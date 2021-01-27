@@ -47,9 +47,9 @@ import com.xiaoniuhy.adx.model.midas2._;
 import com.xiaoniuhy.adx.thrift.EventMergeClient;
 import com.xiaoniuhy.utils.BytesUtils;
 
+import org.apache.spark.TaskContext;
 object main {
-
-     def sendBatchClient(trackingEvents: List[AdxAdposEvents] ):AdxAdposEvents =  {
+     def sendBatchClient( partition:String,trackingEvents: List[AdxAdposEvents] ):AdxAdposEvents =  {
         var event:AdxAdposEvents = null;
         var tTransport:TTransport = null;
         try {
@@ -62,7 +62,7 @@ object main {
             for(tmp <- trackingEvents){
                 trackingEventsBytes.add( ByteBuffer.wrap(tmp.toByteArray()));
             }
-            client.batchEvent( "test",trackingEventsBytes);
+            client.batchEvent( partition,trackingEventsBytes);
         } catch{
           case  ex:TException =>{
             print(" InvalidProtocolBufferException");
@@ -117,7 +117,7 @@ object main {
           arrayRows ++= events
         }
         if(arrayRows.length != 0){
-          sendBatchClient(arrayRows.toList)
+          sendBatchClient("%d".format(TaskContext.get.partitionId),arrayRows.toList)
         }
 
         

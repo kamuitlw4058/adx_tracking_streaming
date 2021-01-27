@@ -246,15 +246,15 @@ public class EventMergeServiceImpl implements EventMergeService.Iface {
     public void batchEvent(java.lang.String topic, List<ByteBuffer> logs) throws TException {
         Summary.Timer requestTimer = requestLatency.startTimer();
         long ts = System.currentTimeMillis();
-        String timestamp = new SimpleDateFormat("yyyyMMddHHmmssSSS").format(ts);
-        System.out.println(String.format( "[%s] recv len:%d",timestamp,logs.size()));
+        String timestamp = new SimpleDateFormat("yyyyMMddHHmmss").format(ts);
+        System.out.println(String.format( "[%s] %s- recv len:%d",timestamp,topic,logs.size()));
         FileOutputStream fos = null;
         try {
            
             Properties properties =  PropertiesUtils.getProperties();
             String baseDir = properties.getProperty("output_dir","data" + File.separator +"EventMergeLogs");
             File baseDirFile = new File(baseDir);
-            String filePath = String.format("%s" +File.separator + "%s.bin", baseDir,timestamp);
+            String filePath = String.format("%s" +File.separator + "%s-%s.bin", baseDir,timestamp,topic);
 
             if(logs != null && logs.size() > 0)
             {
