@@ -1,4 +1,4 @@
-package com.xiaoniuhy.adp.thrift;
+package com.xiaoniuhy.adx.thrift;
 
 import com.xiaoniuhy.utils.BytesUtils;
 import com.xiaoniuhy.utils.PropertiesUtils;
