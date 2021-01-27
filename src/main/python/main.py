@@ -4,7 +4,7 @@ import time
 
 from python_common.utils.shell_utils import run_cli
 
-base_path = '../java'
+base_path = '../../../'
 datapath= f'{base_path}/data/'
 last_flag = 'last'
 module ='EventMergeLogs'
