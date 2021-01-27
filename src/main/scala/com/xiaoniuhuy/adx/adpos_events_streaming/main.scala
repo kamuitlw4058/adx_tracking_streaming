@@ -49,8 +49,8 @@ import com.xiaoniuhy.utils.BytesUtils;
 
 object main {
 
-     def sendBatchClient(trackingEvents: List[AdpTrackingLogEvent] ):AdpTrackingLogEvent =  {
-        var event:AdpTrackingLogEvent = null;
+     def sendBatchClient(trackingEvents: List[AdxAdposEvents] ):AdxAdposEvents =  {
+        var event:AdxAdposEvents = null;
         var tTransport:TTransport = null;
         try {
             tTransport = new TSocket("localhost", 18989, 30000);
@@ -111,7 +111,7 @@ object main {
         for(  x <- iter ){
           val trackModel =  EventMergeClient.parseFastjson(BytesUtils.decode(x.value()));
           
-          val events =  MidasTrackModelConvUtils.ConvToClickhouseAdxAdpos(trackModel);
+          val events =  MidasTrackModelConvUtils.ConvToClickhouseAdxAdpos(trackModel).asScala;
           //val log = TrackingLog.parseFrom( x.value())
           //val row =  TypeConvertUtils.trackingLog2ClickhouseLog(log)
           arrayRows ++= events
