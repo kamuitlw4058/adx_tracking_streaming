@@ -64,7 +64,7 @@ public class EventMergeServiceImpl implements EventMergeService.Iface {
             AdxAdposEvents mergedEvent =  builder.build();
             byte[]  value = mergedEvent.toByteArray();
             rocksDB.put(sourceKeyBytes,value);
-            if(builder.getAdSource().getStrategy().getId() != null){
+            if(builder.getAdSource().getStrategy().getId() != null && builder.getAdSource().getStrategy().getId() != ""){
                 mergedEvent.writeDelimitedTo(fos);
             }
         } catch (RocksDBException | IOException e) {
@@ -184,7 +184,7 @@ public class EventMergeServiceImpl implements EventMergeService.Iface {
             //         mergedEvent.writeDelimitedTo(fos);
             //         break;
             // }
-            if(builder.getAdSource().getStrategy().getId() != null){
+            if(builder.getAdSource().getStrategy().getId() != null && builder.getAdSource().getStrategy().getId() != ""){
                 mergedEvent.writeDelimitedTo(fos);
             }
            
