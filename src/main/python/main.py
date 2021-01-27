@@ -39,7 +39,7 @@ print('start to write pb data...')
 for f,ts,filepath in zip(datalist,formated_datalist,datalist):
     if ts > last_ts:
         print(f'start write:{f}')
-        cmd_format = f"""cat {os.path.join(module_data_dir,f)} | clickhouse-client -h  cc-uf6tj4rjbu5ez10lb.ads.aliyuncs.com -u chaixiaohui  --password AAAaaa111! --port 3306 --query "INSERT INTO {db}.{table} FORMAT Protobuf SETTINGS format_schema='{pb_path}:{pb_class}'" """
+        cmd_format = f"""cat {os.path.join(module_data_dir,f)} | clickhouse-client -h   cc-uf6y3p4u3ff10s973.ads.aliyuncs.com -u xnad_suanfa  --password M6119Hb#Aj80TtosdkjUDN89 --port 3306 --query "INSERT INTO {db}.{table} FORMAT Protobuf SETTINGS format_schema='{pb_path}:{pb_class}'" """
         r =  run_cli(cmd_format)
         if ts > final_ts:
             final_ts = ts
