@@ -45,7 +45,17 @@ public class EventMergeServiceImpl implements EventMergeService.Iface {
         byte[] bs = BytesUtils.toBytes(log);
         processRow(bs,fos);
         return ret;
+    
     }
+
+    public boolean hasStrategyId(AdxAdposEvents.Builder builder){
+        return builder.getAdSource().getStrategy().getId() != null && builder.getAdSource().getStrategy().getId() != "";
+    }
+
+    public boolean hasStrategyResultCode(AdxAdposEvents.Builder builder){
+        return builder.getAdSource().getStrategy().getResultCode() != null && builder.getAdSource().getStrategy().getResultCode() != "";
+    }
+
 
     public void  processSourceEvent(AdxAdposEvents.Builder builder,FileOutputStream fos){
         try {
@@ -54,22 +64,24 @@ public class EventMergeServiceImpl implements EventMergeService.Iface {
 
             if(oldSourceValue != null && oldSourceValue.length > 0){
                 AdxAdposEvents.Builder oldSourceAdxAdposEvents = AdxAdposEvents.parseFrom(oldSourceValue).toBuilder();
-                oldSourceAdxAdposEvents = oldSourceAdxAdposEvents.clearImpression();
-                oldSourceAdxAdposEvents = oldSourceAdxAdposEvents.clearClick();
-                oldSourceAdxAdposEvents = oldSourceAdxAdposEvents.clearReward();
+                // oldSourceAdxAdposEvents = oldSourceAdxAdposEvents.clearImpression();
+                // oldSourceAdxAdposEvents = oldSourceAdxAdposEvents.clearClick();
+                // oldSourceAdxAdposEvents = oldSourceAdxAdposEvents.clearReward();
                 builder =  oldSourceAdxAdposEvents.mergeFrom(builder.build());
             }
             builder =updateEventDate(builder);
             builder =updateMergeCount(builder);
+
             long ts = builder.getTime().getTimestamp();
             AdpUInt64MapType.Builder eventCodeHistroyBuilder = builder.getEventCodeHistroyBuilder();
             eventCodeHistroyBuilder.addKey(builder.getEventCode().toString());
             eventCodeHistroyBuilder.addValue(ts);
+
             AdxAdposEvents mergedEvent =  builder.build();
             byte[]  value = mergedEvent.toByteArray();
             rocksDB.put(sourceKeyBytes,value);
-            if(builder.getAdSource().getStrategy().getId() != null && builder.getAdSource().getStrategy().getId() != ""
-            && builder.getSession().getId() != null && builder.getSession().getId()  != ""){
+
+            if(hasStrategyId(builder)  || hasStrategyResultCode(builder)){
                 mergedEvent.writeDelimitedTo(fos);
             }
         } catch (RocksDBException | IOException e) {
@@ -116,6 +128,7 @@ public class EventMergeServiceImpl implements EventMergeService.Iface {
     public void processAdposEvent(AdxAdposEvents.Builder builder,FileOutputStream fos){
 
         try {
+            AdpUInt64MapType.Builder eventCodeHistroyBuilder = builder.getEventCodeHistroyBuilder();
 
             byte[] keyBytes = getSessionIdKey(builder.getSession().getId());
             byte[] oldValue =  rocksDB.get(keyBytes);
@@ -137,9 +150,15 @@ public class EventMergeServiceImpl implements EventMergeService.Iface {
             if(oldValue != null && oldValue.length > 0){
                 AdxAdposEvents.Builder oldAdxAdposEvents = AdxAdposEvents.parseFrom(oldValue).toBuilder();
                 if(oldSourceAdxAdposEvents != null){
-                    oldSourceAdxAdposEvents = oldSourceAdxAdposEvents.clearImpression();
-                    oldSourceAdxAdposEvents = oldSourceAdxAdposEvents.clearClick();
-                    oldSourceAdxAdposEvents = oldSourceAdxAdposEvents.clearReward();
+                    oldSourceAdxAdposEvents.clearImpression();
+                    oldSourceAdxAdposEvents.clearClick();
+                    oldSourceAdxAdposEvents.clearReward();
+                    if(oldSourceAdxAdposEvents.getEventCodeHistroy().getKeyCount() < oldAdxAdposEvents.getEventCodeHistroy().getKeyCount()){
+                        oldSourceAdxAdposEvents.clearEventCodeHistroy();
+                    }
+                    else{
+                        oldAdxAdposEvents.clearEventCodeHistroy();
+                    }
                     oldAdxAdposEvents =  oldAdxAdposEvents.mergeFrom(oldSourceAdxAdposEvents.build());
                 }
 
@@ -147,13 +166,9 @@ public class EventMergeServiceImpl implements EventMergeService.Iface {
             }
             else{
                 if(oldSourceAdxAdposEvents != null){
-                    oldSourceAdxAdposEvents = oldSourceAdxAdposEvents.clearImpression();
-                    oldSourceAdxAdposEvents = oldSourceAdxAdposEvents.clearClick();
-                    oldSourceAdxAdposEvents = oldSourceAdxAdposEvents.clearReward();
                     builder =  oldSourceAdxAdposEvents.mergeFrom(builder.build());
                 }
             }
-
 
             AdpInteractionType.Builder intercationBuilder = null;   
             switch (builder.getEventCode()){
@@ -178,40 +193,21 @@ public class EventMergeServiceImpl implements EventMergeService.Iface {
             builder = updateEventDate(builder);
             builder = updateMergeCount(builder);
 
-            AdpUInt64MapType.Builder eventCodeHistroyBuilder = builder.getEventCodeHistroyBuilder();
+            
             eventCodeHistroyBuilder.addKey(builder.getEventCode().toString());
             eventCodeHistroyBuilder.addValue(ts);
-
-
 
             AdxAdposEvents mergedEvent =  builder.build();
 
             byte[]  value = mergedEvent.toByteArray();
             rocksDB.put(keyBytes,value);
-            // switch (builder.getEventCode()){
-            //     case MIDAS_APP_OFFER:
-            //     case MIDAS_IMPRESSION:
-            //     case MIDAS_CLICK:
-            //     case MIDAS_REWARDED:
-            //         mergedEvent.writeDelimitedTo(fos);
-            //         break;
-            // }
 
-
-
-
-            if(builder.getAdSource().getStrategy().getId() != null 
-            && builder.getAdSource().getStrategy().getId() != ""){
+            if(hasStrategyId(builder)  || hasStrategyResultCode(builder)){
                 mergedEvent.writeDelimitedTo(fos);
             }
            
-
             if(oldSourceAdxAdposEvents != null){
-               oldSourceAdxAdposEvents = oldSourceAdxAdposEvents.clearImpression();
-               oldSourceAdxAdposEvents = oldSourceAdxAdposEvents.clearClick();
-               oldSourceAdxAdposEvents = oldSourceAdxAdposEvents.clearReward();
-               oldSourceAdxAdposEvents = oldSourceAdxAdposEvents.mergeFrom(builder.build());
-               rocksDB.put(sourceKeyBytes,oldSourceAdxAdposEvents.build().toByteArray());
+               rocksDB.put(sourceKeyBytes,value);
            }
         } catch (RocksDBException | IOException e) {
             e.printStackTrace();
