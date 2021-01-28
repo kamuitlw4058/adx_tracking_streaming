@@ -61,6 +61,10 @@ public class EventMergeServiceImpl implements EventMergeService.Iface {
             }
             builder =updateEventDate(builder);
             builder =updateMergeCount(builder);
+            long ts = builder.getTime().getTimestamp();
+            AdpUInt64MapType.Builder eventCodeHistroyBuilder = builder.getEventCodeHistroyBuilder();
+            eventCodeHistroyBuilder.addKey(builder.getEventCode().toString());
+            eventCodeHistroyBuilder.addValue(ts);
             AdxAdposEvents mergedEvent =  builder.build();
             byte[]  value = mergedEvent.toByteArray();
             rocksDB.put(sourceKeyBytes,value);
@@ -163,8 +167,8 @@ public class EventMergeServiceImpl implements EventMergeService.Iface {
                     intercationBuilder = builder.getRewardBuilder();
                     break;
             }
+            long ts = builder.getTime().getTimestamp();
             if(intercationBuilder != null){
-                long ts = builder.getTime().getTimestamp();
                 if(!intercationBuilder.getTimestampList().contains(ts)){
                     intercationBuilder.addIp(0);
                     intercationBuilder.addTimestamp(ts);
@@ -173,6 +177,13 @@ public class EventMergeServiceImpl implements EventMergeService.Iface {
             }
             builder = updateEventDate(builder);
             builder = updateMergeCount(builder);
+
+            AdpUInt64MapType.Builder eventCodeHistroyBuilder = builder.getEventCodeHistroyBuilder();
+            eventCodeHistroyBuilder.addKey(builder.getEventCode().toString());
+            eventCodeHistroyBuilder.addValue(ts);
+
+
+
             AdxAdposEvents mergedEvent =  builder.build();
 
             byte[]  value = mergedEvent.toByteArray();
@@ -185,7 +196,12 @@ public class EventMergeServiceImpl implements EventMergeService.Iface {
             //         mergedEvent.writeDelimitedTo(fos);
             //         break;
             // }
-            if(builder.getAdSource().getStrategy().getId() != null && builder.getAdSource().getStrategy().getId() != ""){
+
+
+
+
+            if(builder.getAdSource().getStrategy().getId() != null 
+            && builder.getAdSource().getStrategy().getId() != ""){
                 mergedEvent.writeDelimitedTo(fos);
             }
            
