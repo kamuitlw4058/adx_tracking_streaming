@@ -159,7 +159,8 @@ public class EventMergeServiceImpl implements EventMergeService.Iface {
                     else{
                         oldAdxAdposEvents.clearEventCodeHistroy();
                     }
-                    oldAdxAdposEvents =  oldAdxAdposEvents.mergeFrom(oldSourceAdxAdposEvents.build());
+
+                    oldAdxAdposEvents.mergeFrom(oldSourceAdxAdposEvents.build());
                 }
 
                 builder =  oldAdxAdposEvents.mergeFrom(builder.build());
@@ -206,9 +207,7 @@ public class EventMergeServiceImpl implements EventMergeService.Iface {
                 mergedEvent.writeDelimitedTo(fos);
             }
            
-            if(oldSourceAdxAdposEvents != null){
-               rocksDB.put(sourceKeyBytes,value);
-           }
+            rocksDB.put(sourceKeyBytes,value);
         } catch (RocksDBException | IOException e) {
             e.printStackTrace();
         }
