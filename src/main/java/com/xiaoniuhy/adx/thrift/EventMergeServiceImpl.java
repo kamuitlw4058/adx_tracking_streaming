@@ -85,7 +85,7 @@ public class EventMergeServiceImpl implements EventMergeService.Iface {
             byte[]  value = mergedEvent.toByteArray();
             rocksDB.put(sourceKeyBytes,value);
 
-            if(hasStrategyId(builder)  || hasStrategyResultCode(builder) && hasSessionId(builder)){
+            if((hasStrategyId(builder)  || hasStrategyResultCode(builder)) && hasSessionId(builder)){
                 mergedEvent.writeDelimitedTo(fos);
             }
         } catch (RocksDBException | IOException e) {
