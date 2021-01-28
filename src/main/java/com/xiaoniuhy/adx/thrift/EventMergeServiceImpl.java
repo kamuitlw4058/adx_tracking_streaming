@@ -56,6 +56,10 @@ public class EventMergeServiceImpl implements EventMergeService.Iface {
         return builder.getAdSource().getStrategy().getResultCode() != null && builder.getAdSource().getStrategy().getResultCode() != "";
     }
 
+    public boolean hasSessionId(AdxAdposEvents.Builder builder){
+        return builder.getSession().getId() != null && builder.getSession().getId() != "";
+    }
+
 
     public void  processSourceEvent(AdxAdposEvents.Builder builder,FileOutputStream fos){
         try {
@@ -81,7 +85,7 @@ public class EventMergeServiceImpl implements EventMergeService.Iface {
             byte[]  value = mergedEvent.toByteArray();
             rocksDB.put(sourceKeyBytes,value);
 
-            if(hasStrategyId(builder)  || hasStrategyResultCode(builder)){
+            if(hasStrategyId(builder)  || hasStrategyResultCode(builder) && hasSessionId(builder)){
                 mergedEvent.writeDelimitedTo(fos);
             }
         } catch (RocksDBException | IOException e) {
@@ -144,7 +148,6 @@ public class EventMergeServiceImpl implements EventMergeService.Iface {
                     //rocksDB.put(getSourceId2SessionIdKey(builder.getAdSource().getId()),builder.getSession().getId());
                 }
             }
-
 
 
             if(oldValue != null && oldValue.length > 0){
