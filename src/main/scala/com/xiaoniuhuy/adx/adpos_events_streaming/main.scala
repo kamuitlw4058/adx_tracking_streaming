@@ -101,7 +101,7 @@ object main {
       PreferConsistent,
       Subscribe[String, ByteBuffer](topics, kafkaParams)
     )
-  stream.print()
+ // stream.print()
     //stream.map(record => print((record.key, record.value)))
 
     stream.foreachRDD { rdd =>
