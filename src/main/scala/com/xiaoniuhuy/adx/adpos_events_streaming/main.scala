@@ -82,8 +82,8 @@ object main {
     val conf = new SparkConf().setMaster("local[2]") 
     .setAppName("Spark_Midas2") 
     .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-
-
+    .registerKryoClasses(util.Arrays.asList(classOf[ConsumerRecord[_, _]]).toArray.asInstanceOf[Array[Class[_]]])
+    
     val ssc = new StreamingContext(conf, Seconds(30))
 
     val kafkaParams = Map[String, Object](
