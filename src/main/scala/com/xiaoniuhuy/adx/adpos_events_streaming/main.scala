@@ -107,30 +107,30 @@ object main {
     stream.foreachRDD { rdd =>
       val offsetRanges = rdd.asInstanceOf[HasOffsetRanges].offsetRanges
       rdd.foreachPartition { iter =>
-       var arrayRows = new ListBuffer[AdxAdposEvents]();
-        for(  x <- iter ){
-          try{
-            val trackModel =  EventMergeClient.parseFastjson(BytesUtils.decode(x.value()));
-            val events =  MidasTrackModelConvUtils.ConvToClickhouseAdxAdpos(trackModel).asScala;
-            arrayRows ++= events
-          }
-          catch{
-            case  ex:Exception =>{
-              print("process row error! Exception");
-              ex.printStackTrace();
-            }
-          }
-        }
-        try{
-          if(arrayRows.length != 0){
-            sendBatchClient("%d".format(TaskContext.get.partitionId),arrayRows.toList)
-          }
-        }catch{
-            case  ex:Exception =>{
-              print("send data error! Exception");
-              ex.printStackTrace();
-            }
-          }
+      //  var arrayRows = new ListBuffer[AdxAdposEvents]();
+      //   for(  x <- iter ){
+      //     try{
+      //       val trackModel =  EventMergeClient.parseFastjson(BytesUtils.decode(x.value()));
+      //       val events =  MidasTrackModelConvUtils.ConvToClickhouseAdxAdpos(trackModel).asScala;
+      //       arrayRows ++= events
+      //     }
+      //     catch{
+      //       case  ex:Exception =>{
+      //         print("process row error! Exception");
+      //         ex.printStackTrace();
+      //       }
+      //     }
+      //   }
+      //   try{
+      //     if(arrayRows.length != 0){
+      //       sendBatchClient("%d".format(TaskContext.get.partitionId),arrayRows.toList)
+      //     }
+      //   }catch{
+      //       case  ex:Exception =>{
+      //         print("send data error! Exception");
+      //         ex.printStackTrace();
+      //       }
+      //     }
       stream.asInstanceOf[CanCommitOffsets].commitAsync(offsetRanges)
 
     }
