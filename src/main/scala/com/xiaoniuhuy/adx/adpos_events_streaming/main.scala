@@ -82,8 +82,8 @@ object main {
     val conf = new SparkConf().setMaster("local[2]") 
     .setAppName("Spark_Midas2") 
     .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-    .registerKryoClasses(util.Arrays.asList(classOf[ConsumerRecord[_, _]]).toArray.asInstanceOf[Array[Class[_]]])
-    
+    //.registerKryoClasses(util.Arrays.asList(classOf[ConsumerRecord[_, _]]).toArray.asInstanceOf[Array[Class[_]]])
+
     val ssc = new StreamingContext(conf, Seconds(30))
 
     val kafkaParams = Map[String, Object](
@@ -92,7 +92,7 @@ object main {
       "value.deserializer" -> classOf[ByteBufferDeserializer],
       "group.id" -> "spark_midas2",
       "auto.offset.reset" -> "latest",
-      "enable.auto.commit" -> (false: java.lang.Boolean)
+      "enable.auto.commit" -> (true: java.lang.Boolean)
     )
 
     val topics = Array("bigdata_xn_point_report")
@@ -101,40 +101,40 @@ object main {
       PreferConsistent,
       Subscribe[String, ByteBuffer](topics, kafkaParams)
     )
- // stream.print()
+  stream.print()
     //stream.map(record => print((record.key, record.value)))
 
-    stream.foreachRDD { rdd =>
-      val offsetRanges = rdd.asInstanceOf[HasOffsetRanges].offsetRanges
-      rdd.foreachPartition { iter =>
-      //  var arrayRows = new ListBuffer[AdxAdposEvents]();
-      //   for(  x <- iter ){
-      //     try{
-      //       val trackModel =  EventMergeClient.parseFastjson(BytesUtils.decode(x.value()));
-      //       val events =  MidasTrackModelConvUtils.ConvToClickhouseAdxAdpos(trackModel).asScala;
-      //       arrayRows ++= events
-      //     }
-      //     catch{
-      //       case  ex:Exception =>{
-      //         print("process row error! Exception");
-      //         ex.printStackTrace();
-      //       }
-      //     }
-      //   }
-      //   try{
-      //     if(arrayRows.length != 0){
-      //       sendBatchClient("%d".format(TaskContext.get.partitionId),arrayRows.toList)
-      //     }
-      //   }catch{
-      //       case  ex:Exception =>{
-      //         print("send data error! Exception");
-      //         ex.printStackTrace();
-      //       }
-      //     }
-      stream.asInstanceOf[CanCommitOffsets].commitAsync(offsetRanges)
+  //   stream.foreachRDD { rdd =>
+  //     val offsetRanges = rdd.asInstanceOf[HasOffsetRanges].offsetRanges
+  //     rdd.foreachPartition { iter =>
+  //     //  var arrayRows = new ListBuffer[AdxAdposEvents]();
+  //     //   for(  x <- iter ){
+  //     //     try{
+  //     //       val trackModel =  EventMergeClient.parseFastjson(BytesUtils.decode(x.value()));
+  //     //       val events =  MidasTrackModelConvUtils.ConvToClickhouseAdxAdpos(trackModel).asScala;
+  //     //       arrayRows ++= events
+  //     //     }
+  //     //     catch{
+  //     //       case  ex:Exception =>{
+  //     //         print("process row error! Exception");
+  //     //         ex.printStackTrace();
+  //     //       }
+  //     //     }
+  //     //   }
+  //     //   try{
+  //     //     if(arrayRows.length != 0){
+  //     //       sendBatchClient("%d".format(TaskContext.get.partitionId),arrayRows.toList)
+  //     //     }
+  //     //   }catch{
+  //     //       case  ex:Exception =>{
+  //     //         print("send data error! Exception");
+  //     //         ex.printStackTrace();
+  //     //       }
+  //     //     }
+  //     stream.asInstanceOf[CanCommitOffsets].commitAsync(offsetRanges)
 
-    }
-  }
+  //   }
+  // }
 
     ssc.start()             // Start the computation
     ssc.awaitTermination()
