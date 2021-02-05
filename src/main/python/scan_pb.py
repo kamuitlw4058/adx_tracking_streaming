@@ -1,8 +1,9 @@
+from datetime import datetime,timedelta
+
 from python_common.utils.datetime_utils import  str_to_datetime
 from python_common.io.scan_datafiles import ScanDataFiles,true_filter,false_filter
 
 from datetime import datetime,timedelta
-
 
 
 def file_filter(filepath,filename,dir_list,extend_params):
@@ -15,7 +16,15 @@ def file_filter(filepath,filename,dir_list,extend_params):
     return False    
 
 def delete_file_filter(filepath,filename,dir_list,extend_params):
-    print(f'delete filter :{filepath}')
+
+    if filename.endswith('.bin'):
+        try:
+            file_create_dt =  datetime.strptime(str(filename.split('-')[0]), '"%Y%m%d%H%M%S')
+            delete_dt = datetime.now() - timedelta(minutes=30)
+            if file_create_dt < delete_dt:
+                print(f'will file:{filepath}')
+        except Exception as e:
+            pass
     return False
 
 
