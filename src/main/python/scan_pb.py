@@ -18,7 +18,7 @@ def file_filter(filepath,filename,dir_list,extend_params):
 def delete_file_filter(filepath,filename,dir_list,extend_params):
     if filename.endswith('.bin'):
         try:
-            file_create_dt =  datetime.strptime(str(filename.split('-')[0]), '"%Y%m%d%H%M%S')
+            file_create_dt =  datetime.strptime(str(filename.split('-')[0]), '%Y%m%d%H%M%S')
             delete_dt = datetime.now() - timedelta(minutes=30)
             if file_create_dt < delete_dt:
                 print(f'will delete  file filter:{filepath}')
