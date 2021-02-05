@@ -23,7 +23,7 @@ def delete_file_filter(filepath,filename,dir_list,extend_params):
             if file_create_dt < delete_dt:
                 print(f'will delete  file filter:{filepath}')
         except Exception as e:
-            pass
+            print(f'process delete failed!{e}')
     return False
 
 
