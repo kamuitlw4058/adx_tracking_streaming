@@ -14,6 +14,9 @@ def file_filter(filepath,filename,dir_list,extend_params):
 
     return False    
 
+def delete_file_filter(filepath,filename,dir_list,extend_params):
+    print(f'delete filter :{filepath}')
+    return False
 
 
 def process_func(data_file,extend_params,data_file_logger):
@@ -23,6 +26,6 @@ def process_func(data_file,extend_params,data_file_logger):
 
 base_path = '/home/wls81/workspace/kimi/adx_tracking_streaming/data/EventMergeLogs'
 
-s = ScanDataFiles('midas2_pb',base_path,file_filters=file_filter,dir_filters=false_filter)
+s = ScanDataFiles('midas2_pb',base_path,file_filters=file_filter,delete_file_filters=delete_file_filter,dir_filters=false_filter)
 s.scan(process_func)
 s.process_files()
