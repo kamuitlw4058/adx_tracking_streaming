@@ -140,7 +140,7 @@ public class EventMergeServiceImpl implements EventMergeService.Iface {
             byte[] oldSourceValue = null;
 
             AdxAdposEvents.Builder oldSourceAdxAdposEvents = null;
-            if( builder.hasAdSource() && builder.getAdSource().getId() != null) {
+            if( builder.hasAdSource() && builder.getAdSource().getId() != null && builder.getAdSource().getId() != "") {
                 sourceKeyBytes = getSourceIdKey(builder.getAdSource().getId());
                 oldSourceValue =  rocksDB.get(sourceKeyBytes);
                 if(oldSourceValue != null && oldSourceValue.length > 0){
