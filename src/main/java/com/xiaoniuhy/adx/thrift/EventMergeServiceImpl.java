@@ -209,8 +209,10 @@ public class EventMergeServiceImpl implements EventMergeService.Iface {
             if(hasStrategyId(builder)  || hasStrategyResultCode(builder)){
                 mergedEvent.writeDelimitedTo(fos);
             }
-           
+           if(sourceKeyBytes != null)
+           {
             rocksDB.put(sourceKeyBytes,value);
+           }
         } catch (RocksDBException | IOException e) {
             e.printStackTrace();
         }
