@@ -28,8 +28,8 @@ def delete_file_filter(filepath,filename,dir_list,extend_params):
     return False
 
 
-def process_func(data_file,extend_params,data_file_logger):
-    data_file_logger.info(f'data_file:{data_file}, extend_params:{extend_params}')
+def process_func(data_file,filename,extend_params,data_file_logger):
+    data_file_logger.info(f'filepath:{data_file},filename:{filename} extend_params:{extend_params}')
     pb_path = f'/home/wls81/workspace/kimi/adp_common/src/main/proto/adx_adpos_events.proto'
     pb_class = 'AdxAdposEvents'
     db = 'ad_adx'
